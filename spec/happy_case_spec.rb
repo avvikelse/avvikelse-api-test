@@ -1,19 +1,22 @@
 
 require 'httparty'
+require 'json'
 
 API_URL = "http://94.247.169.81"
 
 describe "avvikelse-api" do
   def post value
-    #HTTParty.post "#{API_URL}/V1/Deviations", {:body => value}
+    #HTTParty.post "#{API_URL}/V1/", {:body => value}
+    @value = value
   end
 
-  def get key
-    #HTTParty.get "#{API_URL}/V1/Deviations"
+  def get query
+    #HTTParty.get "#{API_URL}/V1/query"
+    [JSON.parse( @value ) ]
   end
   
   def json_from lat, lon
-    
+    {:lat => lat, :lon => lon}.to_json
   end
   
   def save_report lat, lon 
