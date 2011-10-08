@@ -41,7 +41,7 @@ end
 
 class Deviation
   # needs to be backed up with some "real data" -> vasttrafik!?
-  @@comments = ["olycka", "motor skada", "vet inte vaför", "alltid versenat"]
+  @@comments = ["olycka", "motor skada", "vet inte vafoer", "alltid versenat"]
   @@lines = [ "1", "2", "3"  ]
   @@vehicles = [ "Oscar", "Hannah"  ]
   @@coords = [[ "11.981211", "57.709792"], [ "11.981300", "58.709792"] ]
