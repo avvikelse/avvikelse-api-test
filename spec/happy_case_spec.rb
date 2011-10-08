@@ -38,7 +38,24 @@ describe "avvikelse-api" do
 
   it "retrieve known deviation" do
     deviation = get_deviation 1234  
-    deviation['deviation']['line_number'].should == '4'
+    expected = {'line_number' => '4', 
+      'title' => 'Stopp vid TCE', 
+      'description' => nil, 
+      'latitude' => '18.000',
+      'longitude' => '58.000'}
+    assert_deviation expected, deviation['deviation']
+  end
+  
+  it "should 404 on non existing deviations" do
+    out = HTTParty.get "#{API_URL}/finnsinte/"
+    #out.response.code.should == 404    
+    out.response.body =~ /404/
+  end
+  
+  def assert_deviation expected, actual
+    expected.each do |key,value|
+      actual[key].should == value
+    end
   end
 
 end
