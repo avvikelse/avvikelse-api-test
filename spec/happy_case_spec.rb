@@ -12,17 +12,17 @@ describe "avvikelse-api" do
     #HTTParty.get "#{API_URL}/V1/Deviations"
   end
   
-  def json_from x, y
+  def json_from lat, lon
     
   end
   
-  def save_report x, y 
-    report = json_from x, y
+  def save_report lat, lon 
+    report = json_from lat, lon
     post report
   end
   
-  def search x, y
-    q = json_from x, y
+  def search lat, lon
+    q = json_from lat, lon
     get q
   end
   
