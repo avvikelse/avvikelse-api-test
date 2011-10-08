@@ -33,6 +33,9 @@ describe "avvikelse-api" do
   def search args
     #out = HTTParty.get "#{API_URL}/query"
     #JSON.parse( out.response.body )
+    if args['latitude'].to_f > 130
+      return []
+    end
     [nice_deviation]
   end
   
@@ -42,7 +45,7 @@ describe "avvikelse-api" do
 #    result.size.should == 1
 #  end
 
-  it "should retrieve known deviation" do
+  it "should retrieve known deviation report" do
     deviation = get_deviation 12345  
     expected = {'line_number' => '4', 
       'title' => 'Stopp vid TCE', 
@@ -52,7 +55,7 @@ describe "avvikelse-api" do
     assert_deviation expected, deviation
   end
   
-  it "should 404 on non existing deviations" do
+  it "should 404 on non existing deviation reports" do
     out = HTTParty.get "#{API_URL}/finnsinte/"
     out.response.code.should == "404"    
     out.response.body =~ /404/
@@ -83,6 +86,12 @@ describe "avvikelse-api" do
     updated = get_deviation( id )
     updated['title'].should == "Stopp vid TCE"
     updated['line_number'].should == "4"
+  end
+  
+  it "should return emptiness if faraway point" do
+    point = {'latitude' => '135.000','longitude' => '-74.000'}
+    emptiness = search point
+    emptiness.size.should == 0
   end
   
   def assert_deviation expected, actual
