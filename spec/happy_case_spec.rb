@@ -15,9 +15,9 @@ describe "avvikelse-api" do
   def get_deviation id
       out = HTTParty.get "#{API_URL}/#{id}/"
       if out.response.code == '200'
-        JSON.parse( out.response.body ) 
+        JSON.parse( out.response.body )['deviation'] 
       else
-        {'deviation' => nice_deviation }
+        nice_deviation
       end
   end
   
@@ -49,7 +49,7 @@ describe "avvikelse-api" do
       'description' => nil, 
       'latitude' => '18.000',
       'longitude' => '58.000'}
-    assert_deviation expected, deviation['deviation']
+    assert_deviation expected, deviation
   end
   
   it "should 404 on non existing deviations" do
@@ -61,7 +61,7 @@ describe "avvikelse-api" do
   it "should save when posting" do
     deviation = nice_deviation
     id = post deviation
-    assert_deviation deviation, get_deviation( id )['deviation']
+    assert_deviation deviation, get_deviation( id )
   end
   
   it "should find a deviation" do
@@ -70,7 +70,19 @@ describe "avvikelse-api" do
     result = search common_point
     result.size.should > 0
     best_result = result.first
+    assert_deviation deviation, best_result
+  end
+  
+  it "should update" do
+    id = post common_point
+    deviation = nice_deviation
+    deviation['id'] = id
+    deviation.merge! nice_deviation
+    post deviation
     
+    updated = get_deviation( id )
+    updated['title'].should == "Stopp vid TCE"
+    updated['line_number'].should == "4"
   end
   
   def assert_deviation expected, actual
