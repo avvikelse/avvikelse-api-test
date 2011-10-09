@@ -10,8 +10,8 @@ require 'htmlentities'
 # define uri of the deviation api
 class DevitationApi
   include HTTParty
-  base_uri 'http://localhost:8888/v1'
-  #base_uri 'http://api.av.vikel.se/v1'
+  #base_uri 'http://localhost:8888/v1'
+  base_uri 'http://api.av.vikel.se/v1'
 end
 
 
@@ -45,8 +45,8 @@ class StopList
              "coordSys" => "WGS84",
              "apiVersion" => "2.1" }
     out = GetStopList.get('/StationsInZone', :query => params)
+    puts out
     xml = XmlSimple.xml_in(out.response.body)
-    puts xml
     tmp_stops = []
     xml['location'].each do |item|
         stop = Stop.new(item['name'][0], item['x'], item['y'])
@@ -64,9 +64,7 @@ end
 
 class Deviation
   # needs to be backed up with some "real data" -> vasttrafik!?
-  @@comments = ["olycka", "motor skada", "vet inte vafoer", "alltid versenat"]
-  @@lines = [ "1", "2", "3"  ]
-  @@vehicles = [ "Oscar", "Hannah"  ]
+  @@comments = ["olycka", "motor skada", "vet inte vafor", "alltid versenat"]
   @@transports = ["BUS", "TRAIN", "SUBWAY"]
   @@stops = StopList.new
 
@@ -76,8 +74,8 @@ class Deviation
     if randomize == true 
       stop = @@stops.random_stop
       @comment = stop.name << " - " << @@comments.sample
-      @line = @@lines.sample 
-      @vehicle = @@vehicles.sample
+      @line = rand(10) + 1 
+      @vehicle = rand(500) + 1
       @latitude = stop.x
       @longitude = stop.y
       @transport = @@transports.sample
@@ -115,7 +113,7 @@ end
 
 
 class DeviationGenerator
-  def initialize(api, interval = '5s')
+  def initialize(api, interval = '1s')
     @scheduler = Rufus::Scheduler.start_new
     @api = api
     @interval = interval
