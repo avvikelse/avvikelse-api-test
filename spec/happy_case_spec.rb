@@ -1,24 +1,42 @@
-
 require 'httparty'
 require 'json'
 
-API_URL = "http://localhost:8888/v1/deviation"
+API_URL = "http://api.av.vikel.se/v1/deviations"
 
 describe "avvikelse-api" do
 
   # Helper functions to build requests
-  def post value
-    HTTParty.post "#{API_URL}/", {:body => value.to_json}
-    42
+  def post deviation_hash
+    q = querify deviation_hash
+    res = HTTParty.post "#{API_URL}/", {:body => q}
+    JSON.parse( res.response.body )['id']
   end
 
   def get_deviation id
-      out = HTTParty.get "#{API_URL}/#{id}/"
-      if out.response.code == '200'
-        JSON.parse( out.response.body )['deviation'] 
-      else
-        nice_deviation
-      end
+    url = "#{API_URL}/#{id}/"
+    out = HTTParty.get url
+    out.response.code.should == '200'
+    body = out.response.body
+    JSON.parse( body )['deviation'] 
+  end
+  
+  def search args
+    #/v1/deviations/status/?latitude=18.00&longitude=58.000&distance=500
+    #out = HTTParty.get "#{API_URL}/status"
+    #JSON.parse( out.response.body )
+    q = querify args
+    res = HTTParty.get "#{API_URL}/status/?#{q}"
+    body = res.response.body
+    JSON.parse( body )
+  end
+  
+  def get_hard_deviation id
+    nice_deviation
+  end
+
+  # support methods
+  def querify hash
+    hash.map {|k,v| "#{k}=#{v}"}.join '&'
   end
   
   def json_from lat, lon
@@ -30,35 +48,9 @@ describe "avvikelse-api" do
     post report
   end
   
-  def search args
-    #out = HTTParty.get "#{API_URL}/query"
-    #JSON.parse( out.response.body )
-    if args['latitude'].to_f > 130
-      return []
-    end
-    [nice_deviation]
-  end
-  
-#  it "should accept traveller reports" do
-#    save_report 59.0, 17.35
-#    result = search 59.0, 17.35
-#    result.size.should == 1
-#  end
-
-  it "should retrieve known deviation report" do
-    deviation = get_deviation 12345  
-    expected = {'line_number' => '4', 
-      'title' => 'Stopp vid TCE', 
-      'description' => nil, 
-      'latitude' => '18.000',
-      'longitude' => '58.000'}
-    assert_deviation expected, deviation
-  end
-  
   it "should 404 on non existing deviation reports" do
     out = HTTParty.get "#{API_URL}/finnsinte/"
     out.response.code.should == "404"    
-    out.response.body =~ /404/
   end
   
   it "should save when posting" do
@@ -72,8 +64,7 @@ describe "avvikelse-api" do
     post deviation
     result = search common_point
     result.size.should > 0
-    best_result = result.first
-    assert_deviation deviation, best_result
+    result['affects'].should > 0
   end
   
   it "should update" do
@@ -83,15 +74,14 @@ describe "avvikelse-api" do
     deviation.merge! nice_deviation
     post deviation
     
-    updated = get_deviation( id )
-    updated['title'].should == "Stopp vid TCE"
-    updated['line_number'].should == "4"
+    updated = get_hard_deviation( id )
+    updated['line'].should == "4"
   end
   
   it "should return emptiness if faraway point" do
-    point = {'latitude' => '135.000','longitude' => '-74.000'}
+    point = {'latitude' => '135.000','longitude' => '-74.000', 'distance' => '10'}
     emptiness = search point
-    emptiness.size.should == 0
+    emptiness['affects'].should == 0
   end
   
   def assert_deviation expected, actual
@@ -101,13 +91,11 @@ describe "avvikelse-api" do
   end
   
   def nice_deviation
-    {'line_number' => '4', 
-      'title' => 'Stopp vid TCE', 
-      'description' => nil}.merge common_point
+    {'line' => '4','vehicle' => 'fiat'}.merge common_point
   end
   
   def common_point
-    {'latitude' => '17.000','longitude' => '60.000'}
+    {'latitude' => '17.0','longitude' => '60.0'}
   end
 
 end
