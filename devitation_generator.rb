@@ -10,7 +10,8 @@ require 'htmlentities'
 # define uri of the deviation api
 class DevitationApi
   include HTTParty
-  base_uri 'http://localhost:8888/v1'
+  #base_uri 'http://localhost:8888/v1'
+  base_uri 'http://api.av.vikel.se/v1'
 end
 
 
